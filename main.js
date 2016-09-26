@@ -1,5 +1,3 @@
-const pieWidth = 960;
-
 function cleanup(row) {
   return {
     activity: row.Activity,
@@ -18,15 +16,20 @@ function cleanup(row) {
 d3.csv('timetable.csv', cleanup, data => {
   console.log(data);
 
-  const pie = d3.select('svg');
+  const chart = d3.select('svg');
 
-  var arc = d3.arc()
-    .innerRadius(50)
-    .outerRadius(70)
-    .startAngle(45 * (Math.PI/180)) //converting from degs to radians
-    .endAngle(3) //just radians
+  const startDate = data
+                      .map(entry => entry.startDate)
+                      .map(dateStr => {
+                        const [yy, mm, dd] = dateStr.split('-').map(str => +str);
+                        return new Date(yy, mm, dd);
+                      });
+  console.log(startDate);
 
-  pie.append('path')
-    .attr("d", arc)
-    .attr("transform", "translate(200,200)");
+  const xScale = d3.scaleTime()
+    .domain([new Date(2016, 9, 5), new Date(2016, 9, 24)])
+    .range([0, 1000]);
+
+  console.log(xScale);
+
 });
