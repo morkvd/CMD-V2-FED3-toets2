@@ -18,18 +18,18 @@ d3.csv('timetable.csv', cleanup, data => {
 
   const chart = d3.select('svg');
 
-  const startDate = data
-                      .map(entry => entry.startDate)
-                      .map(dateStr => {
-                        const [yy, mm, dd] = dateStr.split('-').map(str => +str);
-                        return new Date(yy, mm, dd);
-                      });
-  console.log(startDate);
+  const [startDate, endDate] = d3.extent(data, entry => entry.startDate);
+  const [startYear, startMonth, startDay] = startDate.split('-');
+  const [endYear, endMonth, endDay] = endDate.split('-');
 
   const xScale = d3.scaleTime()
-    .domain([new Date(2016, 9, 5), new Date(2016, 9, 24)])
+    .domain([
+      new Date(startYear, startMonth, startDay),
+      new Date(endYear, endMonth, endDay)
+    ])
     .range([0, 1000]);
 
   console.log(xScale);
-
 });
+
+// [1]: http://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array
