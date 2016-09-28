@@ -5,14 +5,14 @@
 function cleanDates(row) {
   return {
     description: row.description,
-    startDatetime: row.startDatetime.split('+')[0],
-    stopDatetime: row.stopDatetime.split('+')[0],
+    startDatetime: new Date(row.startDatetime.split('+')[0]), // .split('+')[0] removes timezone part from the
+    stopDatetime: new Date(row.stopDatetime.split('+')[0]),   // datetimeString because js cant handle it
     label: row.label,
     type: row.type,
   };
 }
 
-d3.csv('20160919locations.csv', cleanDates, locationData => {
+function plot(locationData) {
   const margin = {
     x: 60,
     y: 40,
@@ -24,8 +24,13 @@ d3.csv('20160919locations.csv', cleanDates, locationData => {
   };
 
   const bar = {
-    height: 50,
+    height: 100,
     margin: 10,
+  };
+
+  const slider = {
+    offset: 4,
+    padding: 13,
   };
 
   console.log(locationData);
@@ -37,22 +42,48 @@ d3.csv('20160919locations.csv', cleanDates, locationData => {
     ])
     .range([0, svg.width]);
 
+  const timeTicks = scaleX.ticks(24);
+
+  console.log(timeTicks.length);
+
   const chart = d3.select('svg')
     .attr('class', 'chart')
     .attr('width', svg.width + margin.x)
     .attr('height', svg.height + margin.y)
       .append('g')
-      .attr('transform', `translate(${margin.x / 2}, ${margin.y})`);
+    .attr('transform', `translate(${margin.x / 2}, ${margin.y})`);
 
-  const bars = chart.selectAll('rect').data(locationData);
+  d3.select('#timeSelectionControl')
+    .attr('type', 'range')
+    .attr('min', 0)
+    .attr('max', svg.width)
+    .attr('value', 0)
+    .style('width', `${svg.width + slider.padding}px`)
+    .style('margin', `0 ${margin.y / 2 + slider.offset}px`);
 
-  bars.enter().append('rect')
-    .attr('width', (d) =>  scaleX(new Date(d.stopDatetime)) - scaleX(new Date(d.startDatetime)))
-    .attr('x', (d) => scaleX(new Date(d.startDatetime)))
+  const timeSelectionIndicator = document.querySelector('#timeSelectionIndicator');
+  const timeSelectionControl = document.querySelector('#timeSelectionControl');
+  timeSelectionControl.addEventListener('input', () => {
+    timeSelectionIndicator.value = scaleX.invert(timeSelectionControl.value);
+  });
+
+  const item = chart.selectAll('g').data(locationData);
+
+  item.enter().append('rect')
+    .attr('width', d =>  scaleX(d.stopDatetime) - scaleX(d.startDatetime))
+    .attr('x', d => scaleX(d.startDatetime))
     .attr('y', margin.y)
     .attr('height', bar.height);
+
+  item.enter().append('text')
+    .attr('x', d => scaleX(d.startDatetime))
+    .attr('y', margin.y)
+    .attr('fill', 'gray')
+    .text(d => d.label);
 
   chart.append('g')
     .attr('transform', `translate(0, ${margin.y + bar.height + bar.margin})`)
     .call(d3.axisBottom(scaleX).ticks(24));
-});
+}
+
+d3.csv('20160919locations.csv', cleanDates, plot);
