@@ -86,8 +86,9 @@ function plot(locationData) {
   timeSelectionControl.addEventListener('input', onTimeSelectionChange);
 
   function onTimeSelectionChange() {
-    timeSelectionDisplay.value = scaleX.invert(timeSelectionControl.value);
-    drawTimeBlocks(scaleX.invert(timeSelectionControl.value));
+    const selectedDate = scaleX.invert(timeSelectionControl.value);
+    timeSelectionDisplay.value = selectedDate;
+    drawTimeBlocks(selectedDate);
     chart.select('.timeSelectionIndicator')
       .attr('transform', `translate(${ timeSelectionControl.value }, 0)`);
   }
