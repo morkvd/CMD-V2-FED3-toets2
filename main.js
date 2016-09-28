@@ -2,7 +2,6 @@
 
 /* Mark van Dijken */
 
-
 d3.csv('20160919locations.csv', cleanDates, plot);
 
 function cleanDates(row) {
@@ -62,19 +61,7 @@ function plot(locationData) {
     .style('width', `${svg.width + slider.padding}px`)
     .style('margin', `0 ${svg.margin.y / 2 + slider.offset}px`);
 
-  const item = chart.selectAll('g').data(locationData);
-
-  item.enter().append('rect')
-    .attr('width', d =>  scaleX(d.stopDatetime) - scaleX(d.startDatetime))
-    .attr('x', d => scaleX(d.startDatetime))
-    .attr('y', svg.margin.y)
-    .attr('height', bar.height);
-
-  item.enter().append('text')
-    .attr('x', d => scaleX(d.startDatetime))
-    .attr('y', svg.margin.y)
-    .attr('fill', 'gray')
-    .text(d => d.label);
+  drawTimeBlocks();
 
   chart.append('g')
     .attr('transform', `translate(0, ${svg.margin.y + bar.height + bar.margin})`)
@@ -87,11 +74,41 @@ function plot(locationData) {
     .attr('height', 220)
     .attr('fill', 'red');
 
+  function drawTimeBlocks(selectedDatetimeString) {
+    const item = chart.selectAll('g').data(locationData);
+
+    item.enter().append('rect')
+      .attr('width', d =>  scaleX(d.stopDatetime) - scaleX(d.startDatetime))
+      .attr('x', d => scaleX(d.startDatetime))
+      .attr('y', svg.margin.y)
+      .attr('height', bar.height);
+    item.exit().remove();
+
+    item.enter().append('text')
+      .attr('x', d => scaleX(d.startDatetime))
+      .attr('y', svg.margin.y)
+      .attr('fill', 'gray')
+      .text(d => d.label);
+    item.exit().remove();
+
+    const selectedDatetime = new Date(scaleX.invert(selectedDatetimeString));
+
+    const selectedBlock = locationData.filter(d => {
+      return d.startDatetime.getTime() < selectedDatetime.getTime() < d.stopDatetime.getTime();
+    });
+
+    const infobox = chart.selectAll('rect').data(selectedBlock);
+
+    infobox.enter().append('rect');
+    infobox.exit().remove();
+  }
+
   const timeSelectionDisplay = document.querySelector('#timeSelectionDisplay');
   const timeSelectionControl = document.querySelector('#timeSelectionControl');
 
   timeSelectionControl.addEventListener('input', () => {
     timeSelectionDisplay.value = scaleX.invert(timeSelectionControl.value);
+    drawTimeBlocks(scaleX.invert(timeSelectionControl.value));
     drawPositionIndicator(timeSelectionControl.value);
   });
 
