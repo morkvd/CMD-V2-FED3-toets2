@@ -35,6 +35,10 @@ function plot(locationData) {
       .append('g')
     .attr('transform', `translate(${ config.svg.margin.x / 2 }, 0)`);
 
+  chart.append('g')
+    .attr('transform', `translate(0, ${config.svg.margin.y + config.bar.height + config.bar.margin})`)
+    .call(d3.axisBottom(scaleX).ticks(24));
+
   d3.select('#timeSelectionControl')
     .attr('type', 'range')
     .attr('min', 0)
@@ -44,11 +48,19 @@ function plot(locationData) {
     .style('margin', `0 ${ config.svg.margin.y / 2 + config.slider.offset }px`);
 
   drawTimeBlocks();
-  drawPositionIndicator(0);
 
-  function drawTimeBlocks(selectedDatetimeString) {
-    const group = chart.selectAll('g').data(locationData);
-    const groupEnter = group.enter().append('g');
+  chart.append('rect')
+    .attr('class', 'timeSelectionIndicator')
+    .attr('width', 2)
+    .attr('x', 0)
+    .attr('y', config.svg.margin.y / 2)
+    .attr('height', 220)
+    .attr('fill', 'red');
+
+  function drawTimeBlocks() {
+    const group = chart.selectAll('g .block').data(locationData);
+    const groupEnter = group.enter().append('g')
+      .attr('class', 'block');
 
     groupEnter.append('rect');
     groupEnter.append('text');
@@ -65,19 +77,6 @@ function plot(locationData) {
       .attr('fill', 'gray')
       .text(d => d.label);
 
-    const selectedDatetime = new Date(scaleX.invert(selectedDatetimeString));
-
-    const selectedBlock = locationData.filter(d => {
-      return d.startDatetime.getTime() < selectedDatetime.getTime() < d.stopDatetime.getTime();
-    });
-
-    const infobox = chart.selectAll('rect').data(selectedBlock);
-    infobox.exit().remove();
-
-    chart.append('g')
-      .attr('transform', `translate(0, ${config.svg.margin.y + config.bar.height + config.bar.margin})`)
-      .call(d3.axisBottom(scaleX).ticks(24));
-
     group.exit().remove();
   }
 
@@ -89,18 +88,8 @@ function plot(locationData) {
   function onTimeSelectionChange() {
     timeSelectionDisplay.value = scaleX.invert(timeSelectionControl.value);
     drawTimeBlocks(scaleX.invert(timeSelectionControl.value));
-    drawPositionIndicator(timeSelectionControl.value);
-  }
-
-  function drawPositionIndicator(offset) {
-    const timeSelectionIndicator = chart.append('rect')
-      .attr('width', 2)
-      .attr('x', 0)
-      .attr('y', config.svg.margin.y / 2)
-      .attr('height', 220)
-      .attr('fill', 'red')
-      .attr('transform', `translate(${offset}, 0)`);
-    timeSelectionIndicator.exit().remove();
+    chart.select('.timeSelectionIndicator')
+      .attr('transform', `translate(${ timeSelectionControl.value }, 0)`);
   }
 }
 
