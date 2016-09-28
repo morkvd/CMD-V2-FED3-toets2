@@ -1,6 +1,6 @@
 description,startDatetime,stopDatetime,label,type
 slaap,2016-09-19T02:00:00+02:00,2016-09-19T08:30:00+02:00:20,home,place
-ochtendritueel,2016-09-19T08:30:00+02:00,2016-09-19T10:32:44+02:00,home,place
+opstaan,2016-09-19T08:30:00+02:00,2016-09-19T10:32:44+02:00,home,place
 bushalte laansloot,2016-09-19T10:32:45+02:00,2016-09-19T10:43:15+02:00,waiting,place
 laansloot>weesperplein,2016-09-19T10:43:15+02:00,2016-09-19T11:47:00+02:00,transport,move
 weesperplein>bph,2016-09-19T11:47:00+02:00,2016-09-19T11:50:50+02:00,walking,move
