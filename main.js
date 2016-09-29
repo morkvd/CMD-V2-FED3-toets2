@@ -22,6 +22,10 @@ const config = {
     offset: 4,
     padding: 13,
   },
+  infobox: {
+    lineheight: 16,
+    fontsize: '0.71em',
+  }
 };
 
 
@@ -66,9 +70,6 @@ function plot(dayParts) {
     .domain(uniqueLabels)
     .range(d3.schemeCategory10);
 
-  // little box that details about selected time
-  const detailsBox = document.querySelector('#details');
-
   // setup chart
   const chart = d3.select('svg')
     .attr('class', 'chart')
@@ -104,7 +105,7 @@ function plot(dayParts) {
   timeSelectionIndicatorContainer.append('rect')
     .attr('width', 2)
     .attr('x', 0)
-    .attr('y', -7)
+    .attr('y', -8)
     .attr('height', 210)
     .attr('fill', 'red');
 
@@ -152,18 +153,18 @@ function plot(dayParts) {
     infoBoxContainer.selectAll('text').remove();
     if (selectedDayPart[0]) {
       infoBoxContainer.append('text')
-        .attr('y', '0')
+        .attr('y', 0)
         .text(selectedDayPart[0].label);
       infoBoxContainer.append('text')
-        .attr('y', '16')
+        .attr('y', config.infobox.lineheight)
         .text(selectedDayPart[0].description);
       infoBoxContainer.append('text')
-        .attr('y', '32')
+        .attr('y', config.infobox.lineheight * 2)
         .text(`${ formatTimeHM(selectedDayPart[0].startDatetime) } - ${formatTimeHM(selectedDayPart[0].stopDatetime)}`);
       infoBoxContainer.selectAll('text')
         .attr('fill', 'black')
         .attr('x', '5')
-        .attr('font-size', '0.71em')
+        .attr('font-size', config.infobox.fontsize)
         .attr('font-family', 'Arial');
     }
     console.log(selectedDayPart[0]);
