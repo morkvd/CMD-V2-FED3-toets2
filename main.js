@@ -42,7 +42,7 @@ function plot(dayParts) {
   // input element that controls currently selected time
   const timeSelectionControl = document.querySelector('#timeSelectionControl');
 
-  let timeSelectionLocation;
+  const detailsBox = document.querySelector('#details');
 
   const chart = d3.select('svg')
     .attr('class', 'chart')
@@ -85,8 +85,8 @@ function plot(dayParts) {
     .attr('fill', 'red');
 
   function onTimeSelectionChange() {
-    timeSelectionLocation = timeSelectionControl.value;
-    timeSelectionDisplay.value = scaleX.invert(timeSelectionLocation);
+    const timeSelectionLocation = timeSelectionControl.value;
+    timeSelectionDisplay.value = formatTime(scaleX.invert(timeSelectionLocation));
 
     drawTimeBlocks();
     drawInfoBox(timeSelectionLocation);
@@ -101,20 +101,21 @@ function plot(dayParts) {
       return (scaleX(d.startDatetime) < selectedTimePosition &&
               selectedTimePosition < scaleX(d.stopDatetime));
     });
+
     console.log(selectedDayPart[0]);
 
-    const group = chart.selectAll('.infoBox').data(selectedDayPart);
-    const groupEnter = group.enter().append('g') // enter elements as groups [1]
-      .attr('class', 'infoBox');
+    detailsBox.innerHTML = '';
 
-    groupEnter.append('text');
-
-    groupEnter.select('text')
-      .attr('x', d => scaleX(d.startDatetime))
-      .attr('y', config.svg.margin.y)
-      .text(d => d.label);
-
-    group.exit().remove();
+    if (selectedDayPart[0]) {
+      const htmlFragment = `
+        <div class="additional-info">
+          <p>${ selectedDayPart[0].label }</p>
+          <p>${ selectedDayPart[0].description }</p>
+          <p>${ formatTime(selectedDayPart[0].startDatetime) } - ${formatTime(selectedDayPart[0].stopDatetime)}</p>
+        </div>
+      `;
+      detailsBox.insertAdjacentHTML('afterbegin', htmlFragment); // hacky way to add info box, TODO: fix this [3]
+    }
   }
 
   function drawTimeBlocks() {
@@ -156,5 +157,9 @@ function removeDuplicates(item, pos, arr) {
   return !pos || item != arr[pos - 1];
 }
 
+// creates time formating function in : (js date obj), out: 'hh:mm:ss AM/PM'
+const formatTime = d3.timeFormat('%X');
+
 // [1] http://stackoverflow.com/questions/24912274/d3-update-data-with-multiple-elements-in-a-group
 // [2] http://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array
+// [3] http://stackoverflow.com/questions/814564/inserting-html-elements-with-javascript
