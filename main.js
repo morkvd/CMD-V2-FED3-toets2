@@ -65,6 +65,10 @@ function plot(dayParts) {
     .style('width', `${ config.svg.width + config.slider.padding }px`)
     .style('margin', `0 ${ config.svg.margin.y / 2 + config.slider.offset }px`);
 
+  chart.append('g')
+    .attr('transform', `translate(0, ${config.svg.margin.y + config.bar.height + config.bar.margin})`)
+    .attr('class', 'infoBox');
+
   drawTimeBlocks();
 
   onTimeSelectionChange();
@@ -84,15 +88,37 @@ function plot(dayParts) {
     timeSelectionLocation = timeSelectionControl.value;
     timeSelectionDisplay.value = scaleX.invert(timeSelectionLocation);
 
-    drawTimeBlocks(timeSelectionLocation);
+    drawTimeBlocks();
+    drawInfoBox(timeSelectionLocation);
 
     // translate timeSelectionIndicator to the position selected by the timeSelectionControl
     chart.select('.timeSelectionIndicator')
       .attr('transform', `translate(${ timeSelectionLocation }, 0)`);
   }
 
-  function drawTimeBlocks(selectedTimePosition) {
-    const groupAll = chart.selectAll('g .block').data(dayParts);
+  function drawInfoBox(selectedTimePosition) {
+    const selectedDayPart = dayParts.filter(d => {
+      return (scaleX(d.startDatetime) < selectedTimePosition &&
+              selectedTimePosition < scaleX(d.stopDatetime));
+    });
+    console.log(selectedDayPart[0]);
+
+    const group = chart.selectAll('.infoBox').data(selectedDayPart);
+    const groupEnter = group.enter().append('g') // enter elements as groups [1]
+      .attr('class', 'infoBox');
+
+    groupEnter.append('text');
+
+    groupEnter.select('text')
+      .attr('x', d => scaleX(d.startDatetime))
+      .attr('y', config.svg.margin.y)
+      .text(d => d.label);
+
+    group.exit().remove();
+  }
+
+  function drawTimeBlocks() {
+    const groupAll = chart.selectAll('.block').data(dayParts);
     const groupAllEnter = groupAll.enter().append('g') // enter elements as groups [1]
       .attr('class', 'block');
 
@@ -105,28 +131,7 @@ function plot(dayParts) {
       .attr('height', config.bar.height)
       .attr('fill', d => colorScale(d.label));
 
-    const selectedDayPart = dayParts.filter(d => {
-      return (scaleX(d.startDatetime) < selectedTimePosition &&
-              selectedTimePosition < scaleX(d.stopDatetime));
-    });
-
-    console.log(selectedDayPart);
-
-    const groupSelection = chart.selectAll('g .infobox').data(selectedDayPart);
-    const groupSelectionEnter = groupSelection.enter().append('g')
-      .attr('class', 'infobox');
-
-
-    groupSelectionEnter.append('text');
-
-    groupSelectionEnter.select('text')
-      .attr('x', d => scaleX(d.startDatetime))
-      .attr('y', config.svg.margin.y)
-      .attr('fill', 'gray')
-      .text(d => d.label);
-
     groupAll.exit().remove();
-    groupSelection.exit().remove();
   }
 }
 
