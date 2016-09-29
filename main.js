@@ -23,7 +23,7 @@ const config = {
   },
 };
 
-function plot(locationData) {
+function plot(dayParts) {
 
   // (TODO: load dates from data instead of hard-coding it)
   const scaleX = d3.scaleTime()
@@ -31,7 +31,7 @@ function plot(locationData) {
     .range([0, config.svg.width]);
 
   // grab all labels from data, sort them, then remove all duplicate stings
-  const uniqueLabels = locationData.map(d => d.label).sort().filter(removeDuplicates);
+  const uniqueLabels = dayParts.map(d => d.label).sort().filter(removeDuplicates);
 
   // create a scale which maps all possible label values to `d3.schemeCategory10` colors
   const colorScale = d3.scaleOrdinal().domain(uniqueLabels).range(d3.schemeCategory10);
@@ -80,37 +80,53 @@ function plot(locationData) {
     .attr('height', 220)
     .attr('fill', 'red');
 
-  function drawTimeBlocks() {
-    const group = chart.selectAll('g .block').data(locationData);
-    const groupEnter = group.enter().append('g') // enter elements as groups [1]
+  function onTimeSelectionChange() {
+    timeSelectionLocation = timeSelectionControl.value;
+    timeSelectionDisplay.value = scaleX.invert(timeSelectionLocation);
+
+    drawTimeBlocks(timeSelectionLocation);
+
+    // translate timeSelectionIndicator to the position selected by the timeSelectionControl
+    chart.select('.timeSelectionIndicator')
+      .attr('transform', `translate(${ timeSelectionLocation }, 0)`);
+  }
+
+  function drawTimeBlocks(selectedTimePosition) {
+    const groupAll = chart.selectAll('g .block').data(dayParts);
+    const groupAllEnter = groupAll.enter().append('g') // enter elements as groups [1]
       .attr('class', 'block');
 
-    groupEnter.append('rect');
-    groupEnter.append('text');
+    groupAllEnter.append('rect');
 
-    groupEnter.select('rect')
+    groupAllEnter.select('rect')
       .attr('width', d =>  scaleX(d.stopDatetime) - scaleX(d.startDatetime))
       .attr('x', d => scaleX(d.startDatetime))
       .attr('y', config.svg.margin.y)
       .attr('height', config.bar.height)
       .attr('fill', d => colorScale(d.label));
 
-    groupEnter.select('text')
+    const selectedDayPart = dayParts.filter(d => {
+      return (scaleX(d.startDatetime) < selectedTimePosition &&
+              selectedTimePosition < scaleX(d.stopDatetime));
+    });
+
+    console.log(selectedDayPart);
+
+    const groupSelection = chart.selectAll('g .infobox').data(selectedDayPart);
+    const groupSelectionEnter = groupSelection.enter().append('g')
+      .attr('class', 'infobox');
+
+
+    groupSelectionEnter.append('text');
+
+    groupSelectionEnter.select('text')
       .attr('x', d => scaleX(d.startDatetime))
       .attr('y', config.svg.margin.y)
       .attr('fill', 'gray')
       .text(d => d.label);
 
-    group.exit().remove();
-  }
-
-  function onTimeSelectionChange() {
-    timeSelectionLocation = timeSelectionControl.value;
-    timeSelectionDisplay.value = scaleX.invert(timeSelectionLocation);
-
-    // translate timeSelectionIndicator to the position selected by the timeSelectionControl
-    chart.select('.timeSelectionIndicator')
-      .attr('transform', `translate(${ timeSelectionLocation }, 0)`);
+    groupAll.exit().remove();
+    groupSelection.exit().remove();
   }
 }
 
