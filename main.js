@@ -8,7 +8,7 @@ d3.csv('20160919locations.csv', cleanUpData, plot);
 const config = {
   svg: {
     width: 1400,
-    height: 200,
+    height: 220,
     margin: {
       x: 60,
       y: 40,
@@ -75,7 +75,7 @@ function plot(dayParts) {
     .attr('width', config.svg.width + config.svg.margin.x)
     .attr('height', config.svg.height + config.svg.margin.y)
       .append('g')
-    .attr('transform', `translate(${ config.svg.margin.x / 2 }, 0)`);
+    .attr('transform', `translate(${ config.svg.margin.x / 2 }, ${ config.svg.margin.y })`);
 
   // add x-axis
   chart.append('g')
@@ -95,11 +95,6 @@ function plot(dayParts) {
   const timeSelectionControl = document.querySelector('#timeSelectionControl');
   timeSelectionControl.addEventListener('input', onTimeSelectionChange);
 
-  // setup infoBox
-  chart.append('g')
-    .attr('transform', `translate(0, ${config.svg.margin.y + config.bar.height + config.bar.margin})`)
-    .attr('class', 'infoBox');
-
   drawTimeBlocks();
 
   // setup the timeSelectionIndicator
@@ -109,8 +104,8 @@ function plot(dayParts) {
   timeSelectionIndicatorContainer.append('rect')
     .attr('width', 2)
     .attr('x', 0)
-    .attr('y', config.svg.margin.y / 2)
-    .attr('height', 170)
+    .attr('y', -7)
+    .attr('height', 210)
     .attr('fill', 'red');
 
   timeSelectionIndicatorContainer.append('text')
@@ -120,6 +115,11 @@ function plot(dayParts) {
     .attr('y', '220')
     .attr('font-size', '16')
     .attr('font-family', 'Arial');
+
+
+    // setup infoBox
+  const infoBoxContainer = chart.append('g')
+    .attr('class', 'infoBox');
 
   // runs every time the range input is moved
   function onTimeSelectionChange() {
@@ -135,7 +135,7 @@ function plot(dayParts) {
     timeSelectionIndicatorContainer.append('text')
       .text(formatTimeHMS(scaleX.invert(selectedTimePosition)))
       .attr('fill', 'black')
-      .attr('x', '-29')
+      .attr('x', '-30')
       .attr('y', '220')
       .attr('font-size', '16')
       .attr('font-family', 'Arial');
@@ -148,19 +148,25 @@ function plot(dayParts) {
               selectedTimePosition < scaleX(d.stopDatetime));
     });
 
-    console.log(selectedDayPart[0]);
-
-    detailsBox.innerHTML = '';
+    infoBoxContainer.attr('transform', `translate(${ selectedTimePosition }, 0)`);
+    infoBoxContainer.selectAll('text').remove();
     if (selectedDayPart[0]) {
-      const htmlFragment = `
-        <div class="additional-info">
-          <p>Label: ${ selectedDayPart[0].label }</p>
-          <p>Omschrijving: ${ selectedDayPart[0].description }</p>
-          <p>${ formatTimeHM(selectedDayPart[0].startDatetime) } - ${formatTimeHM(selectedDayPart[0].stopDatetime)}</p>
-        </div>
-      `;
-      detailsBox.insertAdjacentHTML('afterbegin', htmlFragment); // hacky way to add info box, TODO: fix this [3]
+      infoBoxContainer.append('text')
+        .attr('y', '0')
+        .text(selectedDayPart[0].label);
+      infoBoxContainer.append('text')
+        .attr('y', '16')
+        .text(selectedDayPart[0].description);
+      infoBoxContainer.append('text')
+        .attr('y', '32')
+        .text(`${ formatTimeHM(selectedDayPart[0].startDatetime) } - ${formatTimeHM(selectedDayPart[0].stopDatetime)}`);
+      infoBoxContainer.selectAll('text')
+        .attr('fill', 'black')
+        .attr('x', '5')
+        .attr('font-size', '0.71em')
+        .attr('font-family', 'Arial');
     }
+    console.log(selectedDayPart[0]);
   }
 
   // draw the time blocks
